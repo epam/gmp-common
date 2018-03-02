@@ -1,0 +1,64 @@
+/*
+ *  /***************************************************************************
+ *  Copyright (c) 2017, EPAM SYSTEMS INC
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *  ***************************************************************************
+ */
+
+group group
+version version
+
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'maven-publish'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            credentials {
+                username project.getProperties().get("user")
+                password project.getProperties().get("passwd")
+            }
+            url "${mvnRepo}/${project.getProperties().get('repo', 'esp')}"
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile "junit:junit:${junitVersion}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile "org.freemarker:freemarker:${freemarkerVersion}"
+    compile "org.apache.httpcomponents:httpclient:${httpcomponentsVersion}"
+}
+
+jar {
+    manifest {
+        attributes("Implementation-Title": "${rootProject.group}:${rootProject.name}",
+                "Implementation-Version": version,
+                "Implementation-Vendor": "EPAM SYSTEMS INC")
+    }
+}
