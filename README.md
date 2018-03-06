@@ -1,3 +1,5 @@
+# GMP common module [![Build Status](https://travis-ci.org/epam/gmp-common.svg?branch=master)](https://travis-ci.org/epam/gmp-common)
+
 The goal for this library is to reduce code size for several operations:
 
 1.Freemarker template (https://freemarker.apache.org) processing Groovy example. Template processing from classpath resources:
