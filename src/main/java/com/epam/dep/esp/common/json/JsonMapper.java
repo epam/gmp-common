@@ -16,9 +16,12 @@
 package com.epam.dep.esp.common.json;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.DefaultSerializerProvider;
 
 public class JsonMapper extends AbstractJsonMapper {
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ThreadLocal<ObjectMapper> objectMapperThreadLocal = ThreadLocal.withInitial(() -> new ObjectMapper());
+
     private static JsonMapper serializer = new JsonMapper();
 
     private JsonMapper() {
@@ -30,6 +33,13 @@ public class JsonMapper extends AbstractJsonMapper {
 
     @Override
     protected ObjectMapper getObjectMapper() {
-        return mapper;
+        return objectMapperThreadLocal.get();
+    }
+
+    public void cleanCache() {
+        SerializerProvider serializerProvider = getObjectMapper().getSerializerProvider();
+        if (serializerProvider instanceof DefaultSerializerProvider) {
+            ((DefaultSerializerProvider) serializerProvider).flushCachedSerializers();
+        }
     }
 }

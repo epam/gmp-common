@@ -18,27 +18,35 @@ version version
 
 apply plugin: 'java'
 apply plugin: 'groovy'
-apply plugin: 'maven-publish'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
     }
 }
 
-publishing {
-    repositories {
-        maven {
-            credentials {
-                username project.getProperties().get("user")
-                password project.getProperties().get("passwd")
+apply plugin: 'com.bmuschko.nexus'
+archivesBaseName = rootProject.name
+
+modifyPom {
+    project {
+        scm {
+            url 'https://github.com/epam/gmp-common'
+            connection 'scm:https://github.com/epam/gmp-common.git'
+            developerConnection 'scm:https://github.com/epam/gmp-common.git'
+        }
+        licenses {
+            license {
+                name 'The Apache Software License, Version 2.0'
+                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                distribution 'repo'
             }
-            url "${mvnRepo}/${project.getProperties().get('repo', 'esp')}"
         }
     }
 }
@@ -61,4 +69,16 @@ jar {
                 "Implementation-Version": version,
                 "Implementation-Vendor": "EPAM SYSTEMS INC")
     }
+}
+
+extraArchive {
+    sources = true
+    tests = false
+    javadoc = false
+}
+
+nexus {
+    sign = true
+    repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
+    snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
 }
