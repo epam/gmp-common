@@ -13,46 +13,70 @@
  *  ***************************************************************************
  */
 
-group group
-version version
+plugins {
+    id 'io.codearte.nexus-staging' version '0.11.0'
+}
 
+apply plugin: 'maven'
 apply plugin: 'java'
 apply plugin: 'groovy'
+
+apply plugin: 'signing'
+
+group group
+version version
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
-    }
-}
-
-apply plugin: 'com.bmuschko.nexus'
 archivesBaseName = rootProject.name
-
-modifyPom {
-    project {
-        scm {
-            url 'https://github.com/epam/gmp-common'
-            connection 'scm:https://github.com/epam/gmp-common.git'
-            developerConnection 'scm:https://github.com/epam/gmp-common.git'
-        }
-        licenses {
-            license {
-                name 'The Apache Software License, Version 2.0'
-                url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                distribution 'repo'
-            }
-        }
-    }
-}
 
 repositories {
     mavenCentral()
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: nexusUsername, password: nexusPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: nexusUsername, password: nexusPassword)
+            }
+
+            pom.project {
+                packaging 'jar'
+                name 'gmp-common'
+                description 'Common module for GroovyManiPulator'
+                url 'https://github.com/epam/gmp-common'
+
+                scm {
+                    url 'https://github.com/epam/gmp-common'
+                    connection 'scm:https://github.com/epam/gmp-common.git'
+                    developerConnection 'scm:https://github.com/epam/gmp-common.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'asamuta'
+                        name 'Andrei Samuta'
+                        email 'a.samuta@gmail.com'
+                    }
+                }
+            }
+        }
+    }
 }
 
 dependencies {
@@ -71,14 +95,24 @@ jar {
     }
 }
 
-extraArchive {
-    sources = true
-    tests = false
-    javadoc = false
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
 }
 
-nexus {
-    sign = true
-    repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2'
-    snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots'
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives javadocJar, sourcesJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+nexusStaging {
+    packageGroup = project.getGroup()
 }
