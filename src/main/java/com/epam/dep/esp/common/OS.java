@@ -33,10 +33,11 @@ public enum OS {
 
     protected final static Logger LOGGER = LoggerFactory.getLogger(OS.class);
     private final static int THREAD_TIME_OUT = 10000;
-    public static String arch = System.getProperty("os.arch").replaceFirst("amd64", "x64");
-    public static String osName = System.getProperty("os.name").toLowerCase();
-    public static String version = System.getProperty("os.version");
-    public static String patch = System.getProperty("sun.os.patch.level");
+    public static final String arch = System.getProperty("os.arch").replaceFirst("amd64", "x64");
+    public static final String osName = System.getProperty("os.name").toLowerCase();
+    public static final String version = System.getProperty("os.version");
+    public static final String patch = System.getProperty("sun.os.patch.level");
+    public static final String INTERRUPTED = "Interrupted";
 
     OS() {
 
@@ -73,7 +74,7 @@ public enum OS {
                 worker.start();
 
                 try {
-                    worker.join(timeout * 1000);
+                    worker.join(timeout * 1000l);
                     if (worker.exit != null) {
                         result = worker.exit;
                     } else {
@@ -82,7 +83,7 @@ public enum OS {
                         worker.join();
                     }
                 } catch (InterruptedException e) {
-                    LOGGER.error("Interrupted", e);
+                    LOGGER.error(INTERRUPTED, e);
                     worker.interrupt();
                 } finally {
                     process.destroy();
@@ -120,6 +121,7 @@ public enum OS {
             stdPumper.start();
         }
 
+        @Override
         public void run() {
             boolean error = false;
             try {
@@ -128,7 +130,7 @@ public enum OS {
                 }
                 exit = process.waitFor();
             } catch (InterruptedException ignore) {
-                LOGGER.error("Interrupted", ignore);
+                LOGGER.error(INTERRUPTED, ignore);
                 error = true;
             } finally {
                 if (!error) {
@@ -136,13 +138,13 @@ public enum OS {
                         LOGGER.debug("Wait for error stream processing.");
                         errorPumper.join(THREAD_TIME_OUT);
                     } catch (InterruptedException e) {
-                        LOGGER.error("Interrupted", e);
+                        LOGGER.error(INTERRUPTED, e);
                     }
                     try {
                         LOGGER.debug("Wait for std stream processing.");
                         stdPumper.join(THREAD_TIME_OUT);
                     } catch (InterruptedException e) {
-                        LOGGER.error("Interrupted", e);
+                        LOGGER.error(INTERRUPTED, e);
                     }
                 }
 
@@ -164,13 +166,13 @@ public enum OS {
                         LOGGER.debug("Wait for error die.");
                         errorPumper.join(THREAD_TIME_OUT);
                     } catch (InterruptedException e) {
-                        LOGGER.error("Interrupted", e);
+                        LOGGER.error(INTERRUPTED, e);
                     }
                     try {
                         LOGGER.debug("Wait for std die.");
                         stdPumper.join(THREAD_TIME_OUT);
                     } catch (InterruptedException e) {
-                        LOGGER.error("Interrupted", e);
+                        LOGGER.error(INTERRUPTED, e);
                     }
                 }
                 result.addAll(errorPumper.getOut());
@@ -206,6 +208,7 @@ public enum OS {
                 }
             }
 
+            @Override
             public void run() {
                 try {
                     try {
@@ -214,7 +217,7 @@ public enum OS {
                             sleep(SLEEP_TIME);
                         }
                     } catch (InterruptedException ie) {
-                        LOGGER.error("Interrupted", ie);
+                        LOGGER.error(INTERRUPTED, ie);
                     } finally {
                         din.close();
                     }

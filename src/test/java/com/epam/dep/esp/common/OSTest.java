@@ -35,16 +35,16 @@ public class OSTest {
 
         switch (testObj) {
             case win:
-                assertEquals((int) testObj.execCommandLine(Arrays.asList(new String[]{"cmd", "/c", "echo %testVar%"}), result, ".", 10, envVar), 0);
+                assertEquals(0, (int) testObj.execCommandLine(Arrays.asList(new String[]{"cmd", "/c", "echo %testVar%"}), result, ".", 10, envVar));
                 break;
 
             case linux:
-                assertEquals((int) testObj.execCommandLine(Arrays.asList(new String[]{"/bin/bash", "-c", "echo $testVar"}), result, ".", 10, envVar), 0);
+                assertEquals(0, (int) testObj.execCommandLine(Arrays.asList(new String[]{"/bin/bash", "-c", "echo $testVar"}), result, ".", 10, envVar));
                 break;
         }
 
-        assertEquals(result.size(), 1);
-        assertEquals(result.get(0), "testOs.var");
+        assertEquals(1, result.size());
+        assertEquals("testOs.var", result.get(0));
     }
 
     @Before
