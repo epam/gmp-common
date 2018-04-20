@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public enum OS {
     win {
@@ -30,11 +31,10 @@ public enum OS {
     unknown {
     };
 
-    protected final static Logger logger = LoggerFactory.getLogger(OS.class);
+    protected final static Logger LOGGER = LoggerFactory.getLogger(OS.class);
     private final static int THREAD_TIME_OUT = 10000;
-    private final static int PROCESS_TIME_OUT = 120000;
     public static String arch = System.getProperty("os.arch").replaceFirst("amd64", "x64");
-    public static String name = System.getProperty("os.name").toLowerCase();
+    public static String osName = System.getProperty("os.name").toLowerCase();
     public static String version = System.getProperty("os.version");
     public static String patch = System.getProperty("sun.os.patch.level");
 
@@ -43,53 +43,62 @@ public enum OS {
     }
 
     public static OS getOs() {
-        logger.debug(name);
-        if (name.startsWith("windows")) return win;
-        else if (name.startsWith("linux")) return linux;
-        else if (name.startsWith("sunos")) return SunOs;
+        LOGGER.debug(osName);
+        if (osName.startsWith("windows")) return win;
+        else if (osName.startsWith("linux")) return linux;
+        else if (osName.startsWith("sunos")) return SunOs;
         else return unknown;
     }
 
-    public synchronized Integer execCommandLine(List<String> command, List<String> out, String homeFolder, int timeout) {
+    public Integer execCommandLine(List<String> command, List<String> out, String homeFolder, int timeout) {
+        return execCommandLine(command, out, homeFolder, timeout, null);
+    }
+
+    public synchronized Integer execCommandLine(List<String> command, List<String> out, String homeFolder, int timeout, Map<String, String> envVars) {
         Integer result = null;
-        if (command != null && command.size() > 0 && out != null) {
+        if (command != null && !command.isEmpty() && out != null) {
             try {
-                logger.debug("Start command" + command);
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Start command" + command);
+                }
                 List<String> processOut;
                 ProcessBuilder builder = new ProcessBuilder(command);
+                // put additional environment variables if needed
+                if (envVars != null) {
+                    builder.environment().putAll(envVars);
+                }
                 if (homeFolder != null) builder.directory(new File(homeFolder));
                 final Process process = builder.start();
                 Worker worker = new Worker(process);
                 worker.start();
 
                 try {
-                    //worker.join(PROCESS_TIME_OUT);
                     worker.join(timeout * 1000);
                     if (worker.exit != null) {
                         result = worker.exit;
                     } else {
-                        logger.debug("Worker timeout");
+                        LOGGER.debug("Worker timeout");
                         worker.interrupt();
                         worker.join();
                     }
                 } catch (InterruptedException e) {
-                    logger.error("Interrupted", e);
+                    LOGGER.error("Interrupted", e);
                     worker.interrupt();
                 } finally {
                     process.destroy();
                 }
-                logger.debug("Pumpers finished.");
+                LOGGER.debug("Pumpers finished.");
                 processOut = worker.getOut();
-                if (logger.isDebugEnabled()) {
+                if (LOGGER.isDebugEnabled()) {
                     for (String item : processOut) {
-                        logger.debug(item);
+                        LOGGER.debug(item);
                     }
-                    logger.debug("Exit code:" + result + " " + command + "\n\r");
+                    LOGGER.debug("Exit code:" + result + " " + command + "\n\r");
                 }
                 out.addAll(processOut);
 
             } catch (IOException e) {
-                logger.error("IOError", e);
+                LOGGER.error("IOError", e);
             }
         }
         return result;
@@ -99,8 +108,8 @@ public enum OS {
         private final Process process;
         List<String> result;
         private Integer exit;
-        private StreamPumper errorPumper;
-        private StreamPumper stdPumper;
+        private final StreamPumper errorPumper;
+        private final StreamPumper stdPumper;
 
         private Worker(Process process) {
             this.process = process;
@@ -114,54 +123,54 @@ public enum OS {
         public void run() {
             boolean error = false;
             try {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Wait for " + process.toString());
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Wait for " + process.toString());
                 }
                 exit = process.waitFor();
             } catch (InterruptedException ignore) {
-                logger.error("Interrupted", ignore);
+                LOGGER.error("Interrupted", ignore);
                 error = true;
             } finally {
                 if (!error) {
                     try {
-                        logger.debug("Wait for error stream processing.");
+                        LOGGER.debug("Wait for error stream processing.");
                         errorPumper.join(THREAD_TIME_OUT);
                     } catch (InterruptedException e) {
-                        logger.error("Interrupted", e);
+                        LOGGER.error("Interrupted", e);
                     }
                     try {
-                        logger.debug("Wait for std stream processing.");
+                        LOGGER.debug("Wait for std stream processing.");
                         stdPumper.join(THREAD_TIME_OUT);
                     } catch (InterruptedException e) {
-                        logger.error("Interrupted", e);
+                        LOGGER.error("Interrupted", e);
                     }
                 }
 
                 if (errorPumper.isAlive()) {
                     errorPumper.interrupt();
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Kill Error Pumper " + process.toString() + errorPumper.toString());
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Kill Error Pumper " + process.toString() + errorPumper.toString());
                     }
                 }
                 if (stdPumper.isAlive()) {
                     stdPumper.interrupt();
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Kill Out Pumper " + process.toString() + stdPumper.toString());
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.debug("Kill Out Pumper " + process.toString() + stdPumper.toString());
                     }
                 }
 
                 if (error) {
                     try {
-                        logger.debug("Wait for error die.");
+                        LOGGER.debug("Wait for error die.");
                         errorPumper.join(THREAD_TIME_OUT);
                     } catch (InterruptedException e) {
-                        logger.error("Interrupted", e);
+                        LOGGER.error("Interrupted", e);
                     }
                     try {
-                        logger.debug("Wait for std die.");
+                        LOGGER.debug("Wait for std die.");
                         stdPumper.join(THREAD_TIME_OUT);
                     } catch (InterruptedException e) {
-                        logger.error("Interrupted", e);
+                        LOGGER.error("Interrupted", e);
                     }
                 }
                 result.addAll(errorPumper.getOut());
@@ -177,7 +186,7 @@ public enum OS {
             private static final int SLEEP_TIME = 0;
             private final BufferedReader din;
             private boolean endOfStream = false;
-            private List<String> out = new ArrayList<String>();
+            private final List<String> out = new ArrayList<>();
 
             public StreamPumper(InputStream is) {
                 this.din = new BufferedReader(new InputStreamReader(is));
@@ -191,6 +200,7 @@ public enum OS {
                 String line = din.readLine();
                 if (line != null) {
                     out.add(line);
+                    LOGGER.info(line);
                 } else {
                     endOfStream = true;
                 }
@@ -204,12 +214,12 @@ public enum OS {
                             sleep(SLEEP_TIME);
                         }
                     } catch (InterruptedException ie) {
-                        logger.error("Interrupted", ie);
+                        LOGGER.error("Interrupted", ie);
                     } finally {
                         din.close();
                     }
                 } catch (IOException ioe) {
-                    logger.error("", ioe);
+                    LOGGER.error("", ioe);
                 }
             }
         }
