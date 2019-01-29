@@ -43,8 +43,8 @@ import java.util.Map;
 
 public class Web {
     public static final int DEFAULT_TIMEOUT = 120000;
-    final static Logger logger = LoggerFactory.getLogger(Web.class);
-    private RequestConfig defaultRequestConfig;
+    static final Logger logger = LoggerFactory.getLogger(Web.class);
+    private RequestConfig requestConfig;
     private PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
     private CloseableHttpClient httpClient;
 
@@ -97,9 +97,10 @@ public class Web {
                 })
                 .build();
 
-        defaultRequestConfig = RequestConfig.custom()
+        requestConfig = RequestConfig.custom()
                 .setSocketTimeout(DEFAULT_TIMEOUT)
                 .setConnectTimeout(DEFAULT_TIMEOUT)
+                .setConnectionRequestTimeout(DEFAULT_TIMEOUT)
                 .build();
     }
 
@@ -125,7 +126,7 @@ public class Web {
         try {
             URI uri = buildURI(path, params);
             HttpPost httpPost = new HttpPost(uri);
-            httpPost.setConfig(defaultRequestConfig);
+            httpPost.setConfig(requestConfig);
             setRequestEntity(httpPost, payload);
             addHeaders(httpPost, headers);
             addCredentials(httpPost, credentials);
@@ -154,7 +155,7 @@ public class Web {
         try {
             URI uri = buildURI(path, params);
             HttpGet httpGet = new HttpGet(uri);
-            httpGet.setConfig(defaultRequestConfig);
+            httpGet.setConfig(requestConfig);
             addHeaders(httpGet, headers);
             addCredentials(httpGet, credentials);
             HttpClientContext context = HttpClientContext.create();
@@ -202,12 +203,11 @@ public class Web {
         try {
             HttpEntity entity = response.getEntity();
             if (entity != null) {
-                InputStream instream = entity.getContent();
-                try {
-                    InputStreamReader isr = new InputStreamReader(instream);
+                InputStream inStream = entity.getContent();
+                try (InputStreamReader isr = new InputStreamReader(inStream)) {
                     int numCharsRead;
                     char[] charArray = new char[1024];
-                    StringBuffer sb = new StringBuffer();
+                    StringBuilder sb = new StringBuilder();
                     while ((numCharsRead = isr.read(charArray)) > 0) {
                         sb.append(charArray, 0, numCharsRead);
                     }
@@ -217,13 +217,17 @@ public class Web {
                     }
                     return sb.toString();
                 } finally {
-                    instream.close();
+                    inStream.close();
                 }
             }
             return null;
         } finally {
             response.close();
         }
+    }
+
+    public void setRequestConfig(RequestConfig requestConfig) {
+        this.requestConfig = requestConfig;
     }
 
     public void close() {
