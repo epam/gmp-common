@@ -48,8 +48,11 @@ public class Web {
     private PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
     private CloseableHttpClient httpClient;
 
-
     public Web() {
+        this(DEFAULT_TIMEOUT);
+    }
+
+    public Web(int timeout) {
         // Increase max total connection to 200
         cm.setMaxTotal(200);
         // Increase default max connection per route to 20
@@ -98,9 +101,9 @@ public class Web {
                 .build();
 
         requestConfig = RequestConfig.custom()
-                .setSocketTimeout(DEFAULT_TIMEOUT)
-                .setConnectTimeout(DEFAULT_TIMEOUT)
-                .setConnectionRequestTimeout(DEFAULT_TIMEOUT)
+                .setSocketTimeout(timeout)
+                .setConnectTimeout(timeout)
+                .setConnectionRequestTimeout(timeout)
                 .build();
     }
 
