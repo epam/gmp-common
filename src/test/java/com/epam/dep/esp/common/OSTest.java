@@ -33,14 +33,10 @@ public class OSTest {
         Map<String, String> envVar = new HashMap<>();
         envVar.put("testVar", "testOs.var");
 
-        switch (testObj) {
-            case win:
-                assertEquals(0, (int) testObj.execCommandLine(Arrays.asList(new String[]{"cmd", "/c", "echo %testVar%"}), result, ".", 10, envVar));
-                break;
-
-            case linux:
-                assertEquals(0, (int) testObj.execCommandLine(Arrays.asList(new String[]{"/bin/bash", "-c", "echo $testVar"}), result, ".", 10, envVar));
-                break;
+        if (testObj == OS.win) {
+            assertEquals(0, (int) testObj.execCommandLine(Arrays.asList(new String[]{"cmd", "/c", "echo %testVar%"}), result, ".", 10, envVar));
+        } else {
+            assertEquals(0, (int) testObj.execCommandLine(Arrays.asList(new String[]{"/bin/bash", "-c", "echo $testVar"}), result, ".", 10, envVar));
         }
 
         assertEquals(1, result.size());

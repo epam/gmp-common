@@ -57,7 +57,7 @@ public class OSRunner {
         boolean error = false;
         try {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Wait for " + process.toString());
+                LOGGER.debug("Wait for {}", process);
             }
             if (process.waitFor(processTimeout, TimeUnit.SECONDS)) {
                 return Integer.valueOf(process.exitValue());
@@ -90,14 +90,14 @@ public class OSRunner {
             if (errorPumper.isAlive()) {
                 errorPumper.interrupt();
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Kill Error Pumper " + process.toString() + errorPumper.toString());
+                    LOGGER.debug("Kill Error Pumper {} {}}", process, errorPumper);
                 }
             }
 
             if (stdPumper.isAlive()) {
                 stdPumper.interrupt();
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Kill Out Pumper " + process.toString() + stdPumper.toString());
+                    LOGGER.debug("Kill Out Pumper {} {}", process, stdPumper);
                 }
             }
 

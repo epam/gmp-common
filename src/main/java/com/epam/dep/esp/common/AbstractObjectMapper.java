@@ -20,7 +20,7 @@ public abstract class AbstractObjectMapper<D, T> implements ObjectMapper<D, T> {
     /**
      * @param pretty - pretty format if true
      * @param obj    - object to map
-     * @return
+     * @return mapped object
      */
     public D map(boolean pretty, T obj) {
         return map(pretty, false, obj);
@@ -28,7 +28,7 @@ public abstract class AbstractObjectMapper<D, T> implements ObjectMapper<D, T> {
 
     /**
      * @param obj - object to map
-     * @return
+     * @return mapped object
      */
     public D map(T obj) {
         return map(false, false, obj);

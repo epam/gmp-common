@@ -28,6 +28,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
@@ -35,12 +36,11 @@ import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
 @Deprecated
-
 /**
  * Use com.epam.dep.esp.common.web.Web instead
  */
 class WebUtils {
-    final static Logger logger = LoggerFactory.getLogger(WebUtils.class);
+    static final Logger logger = LoggerFactory.getLogger(WebUtils.class);
     protected String method;
     protected String login;
     protected String password;
@@ -61,8 +61,6 @@ class WebUtils {
     }
 
     private HttpURLConnection getConnection(int count) throws MalformedURLException, IOException, URISyntaxException, HttpException {
-        //URL serverAddress = new URL(path);
-
         URIBuilder builder = new URIBuilder(path);
 
         if (params != null) {
@@ -93,7 +91,7 @@ class WebUtils {
                 && payload != null) {
             if (payload instanceof String) {
                 conn.setDoOutput(true);
-                OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream(), "UTF-8");
+                OutputStreamWriter writer = new OutputStreamWriter(conn.getOutputStream(), StandardCharsets.UTF_8);
                 writer.write((String) payload);
                 writer.close();
             }
@@ -127,13 +125,13 @@ class WebUtils {
             //TODO add PORT support
             conn = getConnection(10);
             int responseCode = conn.getResponseCode();
-            logger.info(conn.getURL() + "\t Response " + responseCode);
+            logger.info("{} \t Response {}", conn.getURL(), responseCode);
 
             switch (responseCode) {
                 case 401:
                     throw new HttpException(conn.getURL().getPath());
                 case 500:
-                    logger.info("Retrying in " + time + "sec...");
+                    logger.info("Retrying in {} sec...", time);
                     Thread.sleep(time * 1000);
                     conn.disconnect();
                     return perform(i - 1, time * 2);
@@ -162,7 +160,7 @@ class WebUtils {
             InputStreamReader isr = new InputStreamReader(inStr);
             int numCharsRead;
             char[] charArray = new char[1024];
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             while ((numCharsRead = isr.read(charArray)) > 0) {
                 sb.append(charArray, 0, numCharsRead);
             }

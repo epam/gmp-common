@@ -27,7 +27,7 @@ public class FreemarkerHelper {
     private Configuration config;
 
     /**
-     * @param classLoader
+     * @param classLoader class loader
      * @param path        base path to templates
      */
     public FreemarkerHelper(ClassLoader classLoader, String path) {
@@ -39,8 +39,8 @@ public class FreemarkerHelper {
     }
 
     /**
-     * @param templateName
-     * @param variables
+     * @param templateName template name
+     * @param variables    variables map
      * @return processed template as a string
      * @throws IOException
      * @throws TemplateException

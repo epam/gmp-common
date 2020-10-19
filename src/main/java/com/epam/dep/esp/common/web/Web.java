@@ -147,10 +147,10 @@ public class Web {
     }
 
     /**
-     * @param path
-     * @param headers
-     * @param params
-     * @param credentials
+     * @param path        path
+     * @param headers     http headers
+     * @param params      http params
+     * @param credentials credentials
      * @return String result for GET request with given parameters
      * @throws WebToolsException
      */
@@ -200,8 +200,8 @@ public class Web {
     protected String performRequest(HttpClientContext context, HttpRequestBase httpRequest) throws IOException {
         CloseableHttpResponse response = httpClient.execute(httpRequest, context);
         if (logger.isInfoEnabled()) {
-            logger.info("Request to " + httpRequest.toString());
-            logger.info("Response " + response.getStatusLine());
+            logger.info("Request to {}", httpRequest);
+            logger.info("Response {}", response.getStatusLine());
         }
         try {
             HttpEntity entity = response.getEntity();

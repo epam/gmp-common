@@ -22,12 +22,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("squid:S00115")
 public enum OS {
     win {},
     linux {},
     SunOs {},
+    macOsX {},
     unknown {};
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(OS.class);
@@ -45,6 +47,7 @@ public enum OS {
         if (osName.startsWith("windows")) return win;
         else if (osName.startsWith("linux")) return linux;
         else if (osName.startsWith("sunos")) return SunOs;
+        else if (osName.startsWith("mac os x")) return macOsX;
         else return unknown;
     }
 
@@ -57,7 +60,7 @@ public enum OS {
         if (command != null && !command.isEmpty() && out != null) {
             try {
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Start command" + command);
+                    LOGGER.debug("Start command: {}", command.stream().collect(Collectors.joining(" ", "\"", "\"")));
                 }
                 List<String> processOut;
                 ProcessBuilder builder = new ProcessBuilder(command);
@@ -79,7 +82,7 @@ public enum OS {
                     for (String item : processOut) {
                         LOGGER.debug(item);
                     }
-                    LOGGER.debug("Exit code:" + result + " " + command + "\n\r");
+                    LOGGER.debug("Exit code: {} {}%\n\r", result, command.stream().collect(Collectors.joining(" ", "\"", "\"")));
                 }
                 out.addAll(processOut);
 
