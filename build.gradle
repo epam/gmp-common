@@ -107,7 +107,7 @@ if (project.hasProperty('signing.keyId')) {
 }
 
 nexusStaging {
-    packageGroup = project.getGroup()
+    packageGroup = "com.epam.dep"
     numberOfRetries = 40
     delayBetweenRetriesInMillis = 10000
 }

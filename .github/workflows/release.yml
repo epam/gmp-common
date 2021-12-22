@@ -25,24 +25,19 @@ jobs:
           distribution: 'adopt'
           java-version: 8
       - uses: eskatos/gradle-command-action@v1
-        name: Build
-        if: ${{ steps.release.outputs.version != '' }}
-        with:
-          gradle-version: ${{ env.gradleVersion }}
-          arguments: build
-      - name: Prepare to publish
+        name: Prepare to publish
         if: ${{ steps.release.outputs.version != '' }}
         run: |
           echo '${{secrets.GPG_KEY_CONTENTS}}' | base64 -d > publish_key.gpg
           gpg --quiet --batch --yes --decrypt --passphrase="${{secrets.SECRET_PASSPHRASE}}" \
           --output secret.gpg publish_key.gpg
       - uses: eskatos/gradle-command-action@v1
-        name: Publish artifact
+        name: Build & Publish
         if: ${{ steps.release.outputs.version != '' }}
         with:
           gradle-version: ${{ env.gradleVersion }}
           arguments: >
-            publish -Psigning.secretKeyRingFile=secret.gpg
+            build publish -Psigning.secretKeyRingFile=secret.gpg
             -Psigning.keyId=${{secrets.SIGNING_KEYID}}
             -Psigning.password=${{secrets.SIGNING_PASSWORD}}
             -PnexusUsername=${{secrets.NEXUS_USERNAME}}
